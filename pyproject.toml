@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knotlab"
+version = "2.0.0"
+description = "Exact knot invariants (Jones, Alexander) from PD codes and braid words, with a WebGL torus-knot viewer"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Cyb0rg137ms" }]
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+bench = ["matplotlib>=3.8"]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10", "matplotlib>=3.8"]
+
+[project.scripts]
+knotlab = "knotlab.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["knotlab*", "invariants*", "topology*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "RUF"]
+ignore = ["E501", "RUF001", "RUF002", "RUF003", "E741"]
+
+[tool.ruff.lint.per-file-ignores]
+"invariants/*" = ["UP006", "UP035", "UP045"]
+"topology/*" = ["UP006", "UP035", "UP045", "UP037", "RUF059", "C401", "I001"]
+"tests/test_knot_theory.py" = ["ALL"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

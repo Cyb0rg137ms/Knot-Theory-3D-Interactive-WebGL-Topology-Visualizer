@@ -1,87 +1,145 @@
-# 🌀 Knot-Theory-3D: WebGL Torus Knot & Topology Simulator
+# knotlab · Knot-Theory-3D
 
-Knot-Theory-3D is a GPU-accelerated interactive 3D WebGL application for visualizing mathematical manifolds, parametric torus knots, and algebraic topology structures in the browser. Built using React Three Fiber, Three.js, and Tailwind CSS, it offers a real-time playground for exploring topological invariant configurations.
+**Exact Jones and Alexander polynomials from PD codes and braid words, with independent cross-checks and an interactive WebGL torus-knot viewer.**
 
----
+[![CI](https://github.com/Cyb0rg137ms/Knot-Theory-3D-Interactive-WebGL-Topology-Visualizer/actions/workflows/ci.yml/badge.svg?branch=production-ready)](https://github.com/Cyb0rg137ms/Knot-Theory-3D-Interactive-WebGL-Topology-Visualizer/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## 📐 Mathematical Framework
+![Bracket and Alexander scaling](docs/assets/bracket_scaling.png)
 
-A torus knot $T(p,q)$ is a closed curve that wraps around a torus (doughnut shape) $p$ times around the major axis and $q$ times through the hole.
+*Measured on this repo's benchmark (`knotlab bench`, random 3-strand braid closures, median of 3, 8 vCPU, Python 3.13). The default tangle-contraction bracket stays in milliseconds at 128 crossings. The two $2^n$ state sums become unusable before 20 crossings.*
 
-### 1. Parametric Equations
-The 3D spatial coordinates $(x, y, z)$ of the knot are computed as functions of the angle $\theta \in [0, 2\pi]$:
+## Why it matters
 
-$$x(\theta) = (R + r\cos(q\theta))\cos(p\theta)$$
-$$y(\theta) = (R + r\cos(q\theta))\sin(p\theta)$$
-$$z(\theta) = r\sin(q\theta)$$
+Knot invariants are easy to get subtly wrong. Sign conventions, mirror images and normalisation all differ between sources, and v1 of this repo shipped lookup tables with wrong entries (its figure-eight Jones had $V(1) = -1$; every knot has $V(1)=1$). knotlab computes every value from the diagram. It then checks each result against an invariant computed by a different algorithm: the determinant must agree between $|\Delta(-1)|$ (Fox calculus, linear algebra) and $|V(-1)|$ (Kauffman state sum, combinatorics). The values are also checked against KnotInfo.
 
-where:
-- $R$ is the major radius (distance from center of tube to center of torus).
-- $r$ is the minor radius (radius of the tube).
-- $p$ and $q$ are co-prime integers indicating the wrapping parameters.
+## Key results
 
-### 2. Invariant Properties
-- **Knot Genus ($g$)**: The minimal genus of a Seifert surface bounded by the knot, calculated as:
-  $$g = \frac{(p - 1)(q - 1)}{2}$$
-- **Alexander Polynomial ($\Delta(t)$)**: An algebraic knot invariant computed for $T(p,q)$ as:
-  $$\Delta(t) = \frac{(t^{pq} - 1)(t - 1)}{(t^p - 1)(t^q - 1)}$$
+| What | Result | Reproduce |
+|---|---|---|
+| Knot table (all 14 prime knots ≤ 7 crossings) | **14/14**: $|\Delta(-1)| = |V(-1)| =$ KnotInfo determinant | `knotlab bench` |
+| Jones/Alexander vs KnotInfo (3_1, 4_1, 5_1, 5_2, 6_1, 7_1) | exact match | `pytest tests/test_knotlab.py` |
+| Three bracket engines | identical on table + 40 random braids | `pytest -k engines` |
+| Bracket, 16 crossings | contraction **0.64 ms** · union-find 591 ms · NumPy 1468 ms | `knotlab bench` |
+| Bracket, 128 crossings | contraction **11.9 ms** (state sum: infeasible, $2^{128}$ states) | `knotlab bench` |
+| Alexander (Fox + Bareiss), 32 / 128 crossings | 21.9 ms / 2.32 s | `knotlab bench` |
+| Torus knots: closed form vs Fox calculus | equal for T(2,3), T(2,5), T(3,4), T(3,5), T(2,9) | `pytest -k torus` |
+| Python tests / web tests | 68 passed / 3 passed (vitest) + `tsc` build | `pytest` · `cd web && npm test && npm run build` |
 
----
+<details><summary>Full scaling table (ms, median of 3)</summary>
 
-## 🛠️ Workings & Pipeline
+| crossings | contraction | union-find 2^n | NumPy 2^n | Alexander |
+|---:|---:|---:|---:|---:|
+| 4 | 0.05 | 0.07 | 0.23 | 0.04 |
+| 8 | 0.16 | 1.33 | 1.75 | 0.25 |
+| 12 | 0.19 | 25.94 | 49.80 | 1.08 |
+| 14 | 0.36 | 127.59 | 284.03 | 2.48 |
+| 16 | 0.64 | 591.25 | 1467.52 | 2.88 |
+| 32 | 1.33 | – | – | 21.91 |
+| 64 | 3.46 | – | – | 202.22 |
+| 128 | 11.94 | – | – | 2319.27 |
+
+Raw data: [`docs/assets/bench.json`](docs/assets/bench.json). Timings depend on the machine. The ratios are what matters.
+</details>
+
+## Architecture
 
 ```mermaid
-graph TD
-    A[UI Parameter Controls] -->|P & Q Sliders| B[Parametric Solver]
-    B -->|Calculate Coordinate Matrix| C[React Three Fiber Canvas]
-    C -->|Generate Geometry Mesh| D[Render TorusKnotGeometry]
-    D -->|Apply Lighting & Materials| E[Output WebGL Canvas Frame]
-    E -->|OrbitControls Interaction| F[User Drag/Zoom Loop]
+flowchart LR
+    N[named knot / T&#40;p,q&#41;] --> FB[from_braid]
+    B[braid word] --> FB --> PD[PD code]
+    PD --> J[Kauffman bracket<br/>tangle contraction]
+    PD --> JR[2^n state sums<br/>union-find · NumPy]
+    PD --> A[Fox matrix +<br/>Bareiss det over Z t]
+    J --> V["Jones V(t)"]
+    JR -. cross-check .-> V
+    A --> D["Alexander Δ(t)"]
+    V --> X{"|V(−1)| = |Δ(−1)|"}
+    D --> X
+    G[torus curve +<br/>closed-form Δ] --> W[web viewer<br/>React Three Fiber]
 ```
 
-1. **Parametric Evaluation**: Re-computes mesh points on-the-fly when sliders for wrap factors $p$ and $q$ are adjusted.
-2. **GPU-Accelerated Rendering**: Utilizes standard shader programs to render metalness, roughness, and wireframe options.
-3. **Interactive Navigation**: Integrates orbit controls, letting users rotate, pan, and zoom around the topological manifold.
+Module-by-module details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
----
+## 60-second quickstart
 
-## 💎 Key Advantages
-
-- **Modern Aesthetics**: Leverages glassmorphic overlay dashboards, responsive layouts, and vibrant dark-mode palettes.
-- **GPU Efficient**: Handled directly in WebGL context via Three.js, keeping memory footprint low.
-- **Calculated Invariants**: Displays algebraic properties (such as genus and Conway polynomials) alongside the physical geometry.
-
----
-
-## 📦 How to Install and Run
-
-### Prerequisites
-- Node.js 18.0 or higher
-- npm or yarn
-
-### Setup
-Navigate to the directory and install dependencies:
 ```bash
-npm install
+git clone https://github.com/Cyb0rg137ms/Knot-Theory-3D-Interactive-WebGL-Topology-Visualizer && cd Knot-Theory-3D-Interactive-WebGL-Topology-Visualizer
+pip install -e ".[dev]"
+knotlab invariants figure_eight          # Jones, Alexander, determinant, PD code as JSON
+knotlab braid 1 1 1 2 -1 2               # any braid closure (here 5_2)
+pytest -q && knotlab bench --quick --out /tmp/bench
+cd web && npm ci && npm run dev          # viewer at http://localhost:5173
 ```
 
-### Running Locally
-To launch the Vite development server:
-```bash
-npm run dev
+Docker (CLI only): `docker build -t knotlab . && docker run --rm knotlab invariants "T(3,4)"`
+
+## Usage
+
+```python
+from knotlab import alexander, determinant, from_braid, jones, knot, torus_braid
+from knotlab.poly import format_poly
+
+pd = knot("5_2")
+format_poly(jones(pd))        # '-t^6 + t^5 - t^4 + 2t^3 - t^2 + t'
+format_poly(alexander(pd))    # '2t - 3 + 2t^-1'
+determinant(pd)               # 7
+
+big = from_braid(torus_braid(2, 41))   # 41 crossings; contraction makes this instant
+jones(big, method="contract")          # method: "contract" | "reference" | "numpy"
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
 
----
+The v1 API still works, and its values are now computed:
 
-<div align="center">
-  <a href="https://q.com">
-    <img src="../../assets/https_q_com.png" alt="Q Logo" width="100" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
-  </a>
-  <br/>
-  <small>Ecosystem mapping and validation protocols courtesy of <a href="https://q.com">q.com</a></small>
-</div>
+```python
+from invariants.jones import JonesPolynomial
+from invariants.alexander import AlexanderPolynomial
+str(JonesPolynomial.from_knot("figure_eight"))                    # 't^2 - t + 1 - t^-1 + t^-2'
+AlexanderPolynomial.from_seifert_matrix([[-1, 1], [0, -1]]).laurent()  # t - 1 + t^-1 (det(M − tMᵀ))
+```
 
-## Performance Benchmark
+More: [`examples/invariants_tour.py`](examples/invariants_tour.py).
 
-*Benchmark not available:* No benchmark script found
+## Design decisions and trade-offs
+
+- **PD codes as the core representation.** They are unambiguous (KnotTheory/KnotInfo convention), cheap to validate, and every algorithm reads them directly. Braid words and names are front-ends.
+- **Exact arithmetic everywhere.** Integer Laurent polynomials, plus fraction-free Bareiss elimination for the Alexander determinant, so there is no floating-point tolerance anywhere in an invariant.
+- **Contraction over brute force.** The default bracket tracks boundary pairings instead of enumerating $2^n$ states. On narrow diagrams this is ~900× faster at 16 crossings and reaches 128 crossings. The brute-force engines are kept because they are simple enough to trust and serve as the oracle in tests.
+- **A negative result kept on purpose.** The NumPy-vectorised state sum is *slower* than the plain union-find loop (2.5× at 16 crossings). Label propagation needs many full-array passes, which costs more than the Python loop saves. It stays as a third independent engine and is not presented as an optimisation.
+- **Independent cross-checks instead of tables.** Reference values (KnotInfo determinants) appear only in tests and the benchmark report, never inside an algorithm.
+- **Browser stays self-contained.** The viewer computes the torus-knot Δ in TypeScript (exact integer division) instead of calling a Python server. The trade-off is that the browser supports torus knots only.
+
+## Limitations and roadmap
+
+Limitations (full list in [docs/LIMITATIONS.md](docs/LIMITATIONS.md)):
+- Knots only, no links.
+- Contraction is still exponential for wide diagrams, and the state sums are capped at 22 crossings.
+- Alexander uses pure-Python exact arithmetic, taking about 2.3 s at 128 crossings.
+- The viewer renders torus knots only.
+- The Gauss-code R1 simplifier is the v1 heuristic (now seam-aware).
+
+Roadmap:
+- [ ] Multivariable Alexander and the link Jones polynomial
+- [ ] HOMFLY-PT via the same contraction scheme
+- [ ] Better contraction ordering (tree-width heuristics) for wide diagrams
+- [ ] Arbitrary PD codes rendered in the viewer (via a WASM/Pyodide build of knotlab)
+- [ ] Code-splitting the 1.1 MB web bundle
+
+## Citation
+
+```bibtex
+@software{knotlab2026,
+  author  = {Cyb0rg137ms},
+  title   = {knotlab: Exact Knot Invariants with Independent Cross-Checks and a WebGL Torus-Knot Viewer},
+  year    = {2026},
+  version = {2.0.0},
+  url     = {https://github.com/Cyb0rg137ms/Knot-Theory-3D-Interactive-WebGL-Topology-Visualizer}
+}
+```
+
+Reference data: C. Livingston and A. H. Moore, *KnotInfo: Table of Knot Invariants*, knotinfo.math.indiana.edu.
+
+## License
+
+MIT. See [LICENSE](LICENSE). The v1 README is preserved at [docs/README_v1.md](docs/README_v1.md).
