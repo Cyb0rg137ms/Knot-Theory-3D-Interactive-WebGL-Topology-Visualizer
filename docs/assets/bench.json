@@ -1,0 +1,211 @@
+{
+  "machine": {
+    "python": "3.13.5",
+    "platform": "Linux-6.12.94+-x86_64-with-glibc2.41"
+  },
+  "seed": 0,
+  "correctness": {
+    "rows": [
+      {
+        "knot": "3_1",
+        "expected": 3,
+        "alexander": 3.0,
+        "jones": 3,
+        "ok": true
+      },
+      {
+        "knot": "4_1",
+        "expected": 5,
+        "alexander": 5.0,
+        "jones": 5.0,
+        "ok": true
+      },
+      {
+        "knot": "5_1",
+        "expected": 5,
+        "alexander": 5.0,
+        "jones": 5,
+        "ok": true
+      },
+      {
+        "knot": "5_2",
+        "expected": 7,
+        "alexander": 7.0,
+        "jones": 7,
+        "ok": true
+      },
+      {
+        "knot": "6_1",
+        "expected": 9,
+        "alexander": 9.0,
+        "jones": 9.0,
+        "ok": true
+      },
+      {
+        "knot": "6_2",
+        "expected": 11,
+        "alexander": 11.0,
+        "jones": 11.0,
+        "ok": true
+      },
+      {
+        "knot": "6_3",
+        "expected": 13,
+        "alexander": 13.0,
+        "jones": 13.0,
+        "ok": true
+      },
+      {
+        "knot": "7_1",
+        "expected": 7,
+        "alexander": 7.0,
+        "jones": 7,
+        "ok": true
+      },
+      {
+        "knot": "7_2",
+        "expected": 11,
+        "alexander": 11.0,
+        "jones": 11,
+        "ok": true
+      },
+      {
+        "knot": "7_3",
+        "expected": 13,
+        "alexander": 13.0,
+        "jones": 13,
+        "ok": true
+      },
+      {
+        "knot": "7_4",
+        "expected": 15,
+        "alexander": 15.0,
+        "jones": 15,
+        "ok": true
+      },
+      {
+        "knot": "7_5",
+        "expected": 17,
+        "alexander": 17.0,
+        "jones": 17,
+        "ok": true
+      },
+      {
+        "knot": "7_6",
+        "expected": 19,
+        "alexander": 19.0,
+        "jones": 19.0,
+        "ok": true
+      },
+      {
+        "knot": "7_7",
+        "expected": 21,
+        "alexander": 21.0,
+        "jones": 21.0,
+        "ok": true
+      }
+    ],
+    "passed": 14,
+    "total": 14
+  },
+  "scaling": [
+    {
+      "crossings": 4,
+      "contract_ms": 0.05413999315351248,
+      "reference_ms": 0.07287299376912415,
+      "numpy_ms": 0.22955799067858607,
+      "alexander_ms": 0.03942500916309655
+    },
+    {
+      "crossings": 6,
+      "contract_ms": 0.08709098619874567,
+      "reference_ms": 0.3032609965885058,
+      "numpy_ms": 0.4770660016220063,
+      "alexander_ms": 0.11068300227634609
+    },
+    {
+      "crossings": 8,
+      "contract_ms": 0.16489399422425777,
+      "reference_ms": 1.3299350102897733,
+      "numpy_ms": 1.750429000821896,
+      "alexander_ms": 0.2465190045768395
+    },
+    {
+      "crossings": 10,
+      "contract_ms": 0.15858100960031152,
+      "reference_ms": 5.5863099987618625,
+      "numpy_ms": 8.63809599832166,
+      "alexander_ms": 0.6248689896892756
+    },
+    {
+      "crossings": 12,
+      "contract_ms": 0.19219299429096282,
+      "reference_ms": 25.94240898906719,
+      "numpy_ms": 49.79701999400277,
+      "alexander_ms": 1.078496003174223
+    },
+    {
+      "crossings": 14,
+      "contract_ms": 0.355194992152974,
+      "reference_ms": 127.59347200335469,
+      "numpy_ms": 284.0336200024467,
+      "alexander_ms": 2.48039499274455
+    },
+    {
+      "crossings": 16,
+      "contract_ms": 0.6406699976650998,
+      "reference_ms": 591.2480990082258,
+      "numpy_ms": 1467.5158800091594,
+      "alexander_ms": 2.8828530048485845
+    },
+    {
+      "crossings": 18,
+      "contract_ms": 0.6622529908781871,
+      "reference_ms": null,
+      "numpy_ms": null,
+      "alexander_ms": 3.9335970068350434
+    },
+    {
+      "crossings": 24,
+      "contract_ms": 0.7185779977589846,
+      "reference_ms": null,
+      "numpy_ms": null,
+      "alexander_ms": 10.845441007404588
+    },
+    {
+      "crossings": 32,
+      "contract_ms": 1.3269379996927455,
+      "reference_ms": null,
+      "numpy_ms": null,
+      "alexander_ms": 21.91189800214488
+    },
+    {
+      "crossings": 48,
+      "contract_ms": 1.801081991288811,
+      "reference_ms": null,
+      "numpy_ms": null,
+      "alexander_ms": 71.1976099992171
+    },
+    {
+      "crossings": 64,
+      "contract_ms": 3.4605200053192675,
+      "reference_ms": null,
+      "numpy_ms": null,
+      "alexander_ms": 202.21873999980744
+    },
+    {
+      "crossings": 96,
+      "contract_ms": 5.844719999004155,
+      "reference_ms": null,
+      "numpy_ms": null,
+      "alexander_ms": 808.059281000169
+    },
+    {
+      "crossings": 128,
+      "contract_ms": 11.940176002099179,
+      "reference_ms": null,
+      "numpy_ms": null,
+      "alexander_ms": 2319.2703149979934
+    }
+  ]
+}
